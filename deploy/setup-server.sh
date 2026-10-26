@@ -64,10 +64,20 @@ printf '[Journal]\nSystemMaxUse=200M\n' > /etc/systemd/journald.conf.d/size.conf
 systemctl restart systemd-journald
 
 log "6/7 Firewall UFW: SSH + HTTP/HTTPS"
-# Se detectan TODOS los puertos donde escucha sshd para no perder el acceso remoto.
-SSH_PORTS=$(ss -tlnpH 2>/dev/null | awk '/sshd|"ssh"/ {n=split($4,a,":"); print a[n]}' | sort -u)
-[ -n "$SSH_PORTS" ] || SSH_PORTS=22
+# Se permiten TODOS los puertos de sshd (según su configuración, no según el proceso: en Ubuntu 24.04
+# el socket puede pertenecer a systemd) y, sobre todo, el puerto de la sesión SSH actual.
+SSH_PORTS=$(sshd -T 2>/dev/null | awk '$1=="port" {print $2}')
+CURRENT_PORT=$(echo "${SSH_CONNECTION:-}" | awk '{print $4}')
+SSH_PORTS=$(printf '%s\n' $SSH_PORTS $CURRENT_PORT | sort -u)
+if [ -z "$SSH_PORTS" ]; then
+  echo "No pude determinar el puerto SSH: NO se activa el firewall para no perder el acceso."
+  exit 1
+fi
 for p in $SSH_PORTS; do ufw allow "$p/tcp" comment 'SSH'; done
+if [ -n "$CURRENT_PORT" ] && ! ufw show added | grep -q "allow $CURRENT_PORT/tcp"; then
+  echo "La regla para el puerto de esta sesión ($CURRENT_PORT) no quedó creada: se aborta."
+  exit 1
+fi
 ufw allow 80/tcp comment 'HTTP'
 ufw allow 443/tcp comment 'HTTPS'
 # Monitoreo del proveedor (SNMP): solo desde las IPs que ya autoriza snmpd.conf.
