@@ -1,0 +1,30 @@
+[Unit]
+Description=Barrio Alerta (Node.js)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=barrio
+Group=barrio
+WorkingDirectory=/opt/barrio-alerta
+EnvironmentFile=/etc/barrio-alerta/barrio-alerta.env
+ExecStart=/usr/bin/node --disable-warning=ExperimentalWarning --max-old-space-size=256 src/server.js
+Restart=on-failure
+RestartSec=3
+# Si falla 5 veces en 60 s, systemd deja de reintentar (evita un bucle infinito).
+StartLimitIntervalSec=60
+StartLimitBurst=5
+
+# Límite de memoria: si la app se descontrola, no se lleva puesto el servidor de 2 GB.
+MemoryMax=400M
+
+# Endurecimiento: la app solo puede escribir en su directorio de datos.
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/var/lib/barrio-alerta
+
+[Install]
+WantedBy=multi-user.target

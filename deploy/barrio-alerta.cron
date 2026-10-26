@@ -1,0 +1,3 @@
+# Backup diario de la base SQLite a las 04:15; se conservan los últimos 7.
+SHELL=/bin/sh
+15 4 * * * barrio cd /opt/barrio-alerta && set -a && . /etc/barrio-alerta/barrio-alerta.env && set +a && /usr/bin/node --disable-warning=ExperimentalWarning src/backup.js >> /var/lib/barrio-alerta/backups/backup.log 2>&1
