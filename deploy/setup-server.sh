@@ -70,10 +70,22 @@ SSH_PORTS=$(ss -tlnpH 2>/dev/null | awk '/sshd|"ssh"/ {n=split($4,a,":"); print 
 for p in $SSH_PORTS; do ufw allow "$p/tcp" comment 'SSH'; done
 ufw allow 80/tcp comment 'HTTP'
 ufw allow 443/tcp comment 'HTTPS'
+# Monitoreo del proveedor (SNMP): solo desde las IPs que ya autoriza snmpd.conf.
+if [ -f /etc/snmp/snmpd.conf ]; then
+  for ip in $(awk '$1=="com2sec" && $3 ~ /^[0-9.]+$/ {print $3}' /etc/snmp/snmpd.conf | sort -u); do
+    ufw allow from "$ip" to any port 161 proto udp comment 'SNMP proveedor'
+  done
+fi
 ufw default deny incoming
 ufw default allow outgoing
 ufw --force enable
 ufw status verbose
+
+# Si hay un servidor de correo preinstalado, que solo escuche localmente (no expuesto a Internet).
+if command -v postconf >/dev/null && [ "$(postconf -h inet_interfaces)" != "loopback-only" ]; then
+  postconf -e inet_interfaces=loopback-only
+  systemctl restart postfix
+fi
 
 log "7/7 Nginx base"
 rm -f /etc/nginx/sites-enabled/default
