@@ -6,7 +6,9 @@ param(
   [int] $Port = 22,
   [string] $Key = "$env:USERPROFILE\.ssh\donweb_ed25519"
 )
-$ErrorActionPreference = 'Stop'
+# 'Continue': en PowerShell 5.1, con 'Stop' cualquier aviso en stderr (ej. "npm notice") corta el script.
+# Los errores reales se detectan con $LASTEXITCODE después de cada comando.
+$ErrorActionPreference = 'Continue'
 Set-Location (Split-Path $PSScriptRoot -Parent)
 
 if (git status --porcelain) { throw 'Hay cambios sin commitear. Hacé commit antes de desplegar.' }
@@ -15,6 +17,7 @@ if ($LASTEXITCODE -ne 0) { throw 'Las pruebas fallaron: no se despliega.' }
 
 $archive = Join-Path $env:TEMP 'barrio-alerta-release.tar.gz'
 git archive --format=tar.gz -o $archive HEAD
+if ($LASTEXITCODE -ne 0) { throw 'No se pudo empaquetar el código.' }
 $sshArgs = @('-i', $Key, '-p', $Port, '-o', 'BatchMode=yes')
 $target = "$User@$Server"
 
