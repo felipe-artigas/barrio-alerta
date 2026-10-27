@@ -20,5 +20,8 @@ nginx -t && systemctl reload nginx
 
 # Sin email: Let's Encrypt ya no envía avisos de vencimiento y la renovación es automática.
 certbot --nginx -d "$DOMAIN" --non-interactive --agree-tos --register-unsafely-without-email --redirect
+# Certbot responde 404 a cualquier otro nombre (ej. la IP pura); mejor redirigir todo al dominio.
+sed -i "s|return 404; # managed by Certbot|return 301 https://$DOMAIN\$request_uri;|" "$CONF"
+nginx -t && systemctl reload nginx
 systemctl list-timers certbot.timer --no-pager || true
 echo "Listo: https://$DOMAIN"
