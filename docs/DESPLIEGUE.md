@@ -66,15 +66,31 @@ useradd --system --home-dir /var/lib/barrio-alerta --shell /usr/sbin/nologin bar
 mkdir -p /var/lib/barrio-alerta && chown barrio:barrio /var/lib/barrio-alerta
 
 # Firewall: PRIMERO permitir SSH, después activar
-ufw allow 22/tcp      # o el puerto SSH real: ss -tlnp | grep ssh
+ufw allow 5911/tcp    # puerto SSH de DonWeb (ver panel); en otros proveedores suele ser 22
 ufw allow 80/tcp
 ufw allow 443/tcp
+ufw show added        # ¿aparece el puerto SSH? Si no, NO sigas
 ufw enable
+systemctl enable ufw  # que siga activo después de reiniciar
 ufw status
 ```
 
 > Antes de `ufw enable`, verificá que la regla de SSH está creada. Mantené una sesión SSH abierta y probá
 > abrir otra nueva. Si la segunda conecta, no te quedaste afuera.
+
+### Desactivar el login SSH con contraseña (solo cuando la clave ya funciona)
+
+```bash
+# Red de seguridad: si en 3 minutos no la cancelás, el cambio se deshace solo
+systemd-run --unit=ssh-rollback --on-active=180 /bin/sh -c "rm -f /etc/ssh/sshd_config.d/01-hardening.conf; systemctl reload ssh"
+printf 'PasswordAuthentication no\nKbdInteractiveAuthentication no\nPermitRootLogin prohibit-password\n' > /etc/ssh/sshd_config.d/01-hardening.conf
+sshd -t && systemctl reload ssh
+# Desde OTRA terminal: ssh -p 5911 root@IP  -> si entra con la clave, cancelar la vuelta atrás:
+systemctl stop ssh-rollback.timer
+```
+
+El archivo empieza con `01-` porque en `sshd_config.d` gana el **primer** valor leído. DonWeb trae un
+`custom.conf` con `PermitRootLogin yes`, y el nuestro se lee antes. La consola web del panel sigue aceptando contraseña.
 
 Con script: `bash deploy/setup-server.sh` hace todo esto y además crea `/etc/barrio-alerta/barrio-alerta.env`.
 
