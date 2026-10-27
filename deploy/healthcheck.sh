@@ -17,7 +17,11 @@ curl -fsS -m 5 http://127.0.0.1:3000/api/health >/dev/null && ok "API responde" 
 echo "4) Nginx"
 systemctl is-active --quiet nginx && ok "nginx activo" || fail "nginx NO activo -> sudo nginx -t"
 code=$(curl -s -o /dev/null -w '%{http_code}' -m 5 http://127.0.0.1/api/health)
-[ "$code" = 200 ] && ok "Nginx -> Node OK (200)" || fail "Nginx devolvió $code (502 = Node caído)"
+case $code in
+  200) ok "Nginx -> Node OK (200)" ;;
+  301|308) ok "Nginx redirige a HTTPS ($code)" ;;
+  *) fail "Nginx devolvió $code (502 = Node caído)" ;;
+esac
 
 echo "5) Firewall"
 ufw status | grep -qE '^(80|443)/tcp.*ALLOW' && ok "80/443 permitidos" || fail "Revisá: sudo ufw status"
@@ -25,7 +29,8 @@ ufw status | grep -qE '^(80|443)/tcp.*ALLOW' && ok "80/443 permitidos" || fail "
 echo "6) Recursos"
 free -m | awk '/Mem:/ {printf "  RAM usada %s/%s MB (disponible %s MB)\n", $3, $2, $7}'
 df -h / | awk 'NR==2 {printf "  Disco usado %s de %s (%s)\n", $3, $2, $5}'
-ps -o rss=,cmd= -C node | awk '{printf "  node RSS %d MB\n", $1/1024}'
+mem=$(systemctl show -p MemoryCurrent --value $APP)
+[ -n "$mem" ] && [ "$mem" != "[not set]" ] && echo "  $APP usa $((mem / 1024 / 1024)) MB (límite MemoryMax 400 MB)"
 
 if [ -n "$PUBLIC_URL" ]; then
   echo "7) URL pública"

@@ -6,7 +6,7 @@ y **redacta el reclamo formal** listo para enviar.
 
 > Proyecto de práctica para la Hackatón DonWeb Day Rosario 2026. Los datos son ficticios.
 
-**URL pública:** _pendiente de despliegue_
+**URL pública:** https://138-36-237-99.sslip.io
 
 ## Problema
 
