@@ -83,7 +83,7 @@ Con script: `bash deploy/setup-server.sh` hace todo esto y además crea `/etc/ba
 **Opción A: GitHub (la de la hackatón).**
 
 ```bash
-git clone https://github.com/<usuario>/barrio-alerta.git /root/barrio-alerta
+git clone https://github.com/felipe-artigas/barrio-alerta.git /root/barrio-alerta
 ```
 
 **Opción B: desde Windows, sin GitHub.**

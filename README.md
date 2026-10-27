@@ -6,7 +6,7 @@ y **redacta el reclamo formal** listo para enviar.
 
 > Proyecto de práctica para la Hackatón DonWeb Day Rosario 2026. Los datos son ficticios.
 
-**URL pública:** https://138-36-237-99.sslip.io
+**URL pública:** https://138-36-237-99.sslip.io · **Repositorio:** https://github.com/felipe-artigas/barrio-alerta
 
 ## Problema
 
@@ -96,7 +96,7 @@ caracteres), `OPENAI_API_KEY` (opcional), `OPENAI_MODEL`, `AI_DAILY_LIMIT`, `DB_
 Guía paso a paso: [docs/DESPLIEGUE.md](docs/DESPLIEGUE.md). En resumen, en el servidor y como root:
 
 ```bash
-git clone https://github.com/<usuario>/barrio-alerta.git /root/barrio-alerta
+git clone https://github.com/felipe-artigas/barrio-alerta.git /root/barrio-alerta
 bash /root/barrio-alerta/deploy/setup-server.sh            # paquetes, Node, usuario, firewall, Nginx
 bash /root/barrio-alerta/deploy/remote-install.sh /root/barrio-alerta   # app + systemd + Nginx
 bash /root/barrio-alerta/deploy/enable-https.sh            # HTTPS con <ip>.sslip.io
